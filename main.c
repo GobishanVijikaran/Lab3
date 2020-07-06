@@ -92,12 +92,7 @@ void adc_2_serial(void *arg){
 // Thread to toggle the LED
 void toggle_led(void *arg){
 	while(true){
-		uint32_t currStatus; 
-		SystemInit(); 
-		
-		LPC_GPIO2->FIODIR =(0<<SWITCHPIN);
-		LPC_GPIO2->FIODIR =(1<<LEDPIN);
-		
+		uint32_t currStatus; 		
 		while(true){ 
 			currStatus = (LPC_GPIO2->FIOPIN & (1<<SWITCHPIN)); 
 			if(!currStatus){ 
@@ -115,7 +110,7 @@ int main(){
 	LPC_GPIO1->FIODIR |= 0xB0000000;
 	LPC_GPIO2->FIODIR |= 0x0000007C;
 	osKernelInitialize(); 
-//	osThreadNew(toggle_led, NULL, NULL); 
+  osThreadNew(toggle_led, NULL, NULL); 
 //	osThreadNew(adc_2_serial, NULL, NULL); 
 	osThreadNew(read_joystick, NULL, NULL); 
 	osKernelStart();  
