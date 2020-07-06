@@ -64,13 +64,10 @@ void adc_2_serial(void *arg){
 		LPC_SC->PCONP |= (MASK << 12); 
 		
 		//set the pin select register (as analog rather than GPIO)
-		//clear bit 
 		LPC_PINCON->PINSEL1 &= ~(0x03 << 18); 
 		LPC_PINCON->PINSEL1 |= (MASK << 18); 
 		
-		//set ADCR for correct input (potentiometer pin 2)
-		// using bits 8-15 as an 8 bit binrary # to represent the divisor 
-		//enable the adcr circuitry (enable bit = 21)
+		//set ADCR
 		LPC_ADC->ADCR = (1 << 2)|(4 << 8)|(1 << 21);
 		
 	// reading the adc 
