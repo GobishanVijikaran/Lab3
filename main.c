@@ -59,10 +59,8 @@ void read_joystick(void *arg){
 // Thread to read values from the ADC and print them out to serial port 
 void adc_2_serial(void *arg){
 
-	while(true){
-		SystemInit(); 
-	//initialization (setting bit 12/adc bit)
-		
+	while(true){ 
+		//initialization (setting bit 12/adc bit)
 		LPC_SC->PCONP |= (MASK << 12); 
 		
 		//set the pin select register (as analog rather than GPIO)
@@ -83,7 +81,7 @@ void adc_2_serial(void *arg){
 			
 			while ((LPC_ADC->ADGDR & 0x1000000000) != 0);
 			int adc_val = (LPC_ADC->ADGDR & (0xFFF << 4)) >> 4; // 4 bit shift to the right, & with bit mask 
-			printf("Converted Value: %d\n", adc_val);
+			printf("%s %d\n",(char *) arg, adc_val);
 			osThreadYield();
 		}
 	}
@@ -111,7 +109,7 @@ int main(){
 	LPC_GPIO2->FIODIR |= 0x0000007C;
 	osKernelInitialize(); 
   osThreadNew(toggle_led, NULL, NULL); 
-//	osThreadNew(adc_2_serial, NULL, NULL); 
+  osThreadNew(adc_2_serial, "Converted Value:", NULL); 
 	osThreadNew(read_joystick, NULL, NULL); 
 	osKernelStart();  
 }
