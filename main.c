@@ -9,6 +9,11 @@
 #define JOYSTICKSOUTH 25 
 #define JOYSTICKWEST 26
 #define JOYSTICKPRESS 20
+#define LEDPIN0 28
+#define LEDPIN1 29
+#define LEDPIN2 31
+#define LEDPIN3 2
+#define LEDPIN4 3
 
 // Task 2 Macro Definitions
 #define MASK 0x01
@@ -19,59 +24,37 @@
 
 // Thread to read the joystick 
 void read_joystick(void *arg){
-	while(true){
-		SystemInit(); 
-		
-		//pointing to block of registers for GPIO1 and output pins set in FIODIR (data direction resiter) to indicate that the pins are inputs
-
-		LPC_GPIO1->FIODIR =((0<<JOYSTICKNORTH)); 
-		LPC_GPIO1->FIODIR =((0<<JOYSTICKEAST));
-		LPC_GPIO1->FIODIR =((0<<JOYSTICKSOUTH)); 
-		LPC_GPIO1->FIODIR =((0<<JOYSTICKWEST)); 
-		
 		// infinite polling (keeps checking to see if data has been received)
 		while(true){
+			LPC_GPIO1->FIOCLR |= (1 << LEDPIN0);
+		  LPC_GPIO1->FIOCLR |= (1 << LEDPIN1);
+		  LPC_GPIO1->FIOCLR |= (1u << LEDPIN2);
+		  LPC_GPIO2->FIOCLR |= (1 << LEDPIN3);
+			
 			//FIOPIN used to read the pin 
 			//logical condition: check if the joystick is pressed or not 
 			if(!(LPC_GPIO1->FIOPIN>>JOYSTICKPRESS & MASK)){
-				//checking for each direction of the joystick and printing out the position
-				if(!(LPC_GPIO1->FIOPIN>>JOYSTICKNORTH & MASK)){
-					printf("%s\n", "Joystick Position: North and Pressed"); 
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKEAST & MASK)){
-					printf("%s\n", "Joystick Position: East and Pressed");
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKSOUTH & MASK)){
-					printf("%s\n", "Joystick Position: South and Pressed");
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKWEST & MASK)){
-					printf("%s\n", "Joystick Position: West and Pressed");
-				}
-				else{
-					printf("%s\n", "Joystick Position: Center and Pressed");
-				}
+				LPC_GPIO2->FIOSET |=(1 << LEDPIN4);
 			}
-			else{
-				if(!(LPC_GPIO1->FIOPIN>>JOYSTICKNORTH & MASK)){
-					printf("%s\n", "Joystick Position: North and Not Pressed"); 
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKEAST & MASK)){
-					printf("%s\n", "Joystick Position: East and Not Pressed");
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKSOUTH & MASK)){
-					printf("%s\n", "Joystick Position: South and Not Pressed");
-				}
-				else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKWEST & MASK)){
-					printf("%s\n", "Joystick Position: West and Not Pressed");
-				}
-				else{
-					printf("%s\n", "Joystick Position: Center and Not Pressed");
-				}
+			else {
+				LPC_GPIO2->FIOCLR |=(1 << LEDPIN4);
 			}
-			osThreadYield();
+			if(!(LPC_GPIO1->FIOPIN>>JOYSTICKNORTH & MASK)){
+				LPC_GPIO1->FIOSET |= (1 << LEDPIN0);
+			}
+			else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKEAST & MASK)){
+				LPC_GPIO1->FIOSET |= (1 << LEDPIN1);
+			}
+			else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKSOUTH & MASK)){
+				LPC_GPIO1->FIOSET |= (1 << LEDPIN0);
+				LPC_GPIO1->FIOSET |= (1 << LEDPIN1);
+			}
+			else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKWEST & MASK)){
+				LPC_GPIO1->FIOSET |= (1u << LEDPIN2);
+			}
+			osDelay(25);
 		}
 	}	
-}
 
 // Thread to read values from the ADC and print them out to serial port 
 void adc_2_serial(void *arg){
@@ -129,9 +112,11 @@ void toggle_led(void *arg){
 }
 
 int main(){
+	LPC_GPIO1->FIODIR |= 0xB0000000;
+	LPC_GPIO2->FIODIR |= 0x0000007C;
 	osKernelInitialize(); 
-	osThreadNew(toggle_led, NULL, NULL); 
-	osThreadNew(adc_2_serial, NULL, NULL); 
+//	osThreadNew(toggle_led, NULL, NULL); 
+//	osThreadNew(adc_2_serial, NULL, NULL); 
 	osThreadNew(read_joystick, NULL, NULL); 
 	osKernelStart();  
 }
